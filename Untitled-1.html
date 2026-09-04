@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyCalc Dashboard</title>
+    <style>
+        :root {
+            --accent: #4F6B8A;
+            --bg-main: #E8EAED;
+            --text-main: #262C33;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-main);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 16px auto;
+            padding: 0 16px;
+            display: grid;
+            gap: 14px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 10px;
+            background: #D9DDE2;
+            border: 1px solid #AEB6C0;
+            border-radius: 7px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        h2 { margin: 0; font-size: 20px; letter-spacing: 0.01em; }
+        
+        .card {
+            background: #FCFCFD;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #C3CAD2;
+            box-shadow: 0 1px 2px rgba(26, 33, 41, 0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .basic-card {
+            background: linear-gradient(135deg, #FFF9C4 0%, #E1F5FE 45%, #F8BBD0 100%);
+            border: 1px solid #B9C4D1;
+        }
+        
+        /* Inputs */
+        input, select {
+            min-height: 48px;
+            border-radius: 7px;
+            border: 1px solid #AEB6C0;
+            padding: 10px 12px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            background: #F7F8FA;
+            color: #222B33;
+            font-size: 15px;
+            box-shadow: inset 0 1px 1px rgba(25, 31, 38, 0.08);
+            outline-color: #3C5879;
+        }
+        
+        /* Buttons */
+        button { font-family: inherit; }
+        .btn-action {
+            min-height: 48px;
+            border-radius: 6px;
+            border: 1px solid #344A64;
+            padding: 10px 16px;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 0 rgba(37,53,73,0.45);
+        }
+        .btn-small {
+            min-height: 48px;
+            border-radius: 6px;
+            border: 1px solid #9FA8B3;
+            padding: 8px 12px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #EDF1F5 100%);
+            color: #24303C;
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 0 rgba(164,173,182,0.6);
+        }
+        .chip {
+            min-height: 48px;
+            padding: 10px 14px;
+            border-radius: 7px;
+            border: 1px solid #AEB4BC;
+            background: #F9FAFB;
+            color: #2F3A45;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+            white-space: nowrap;
+        }
+        .chip.active {
+            border-color: var(--accent);
+            background: #EAF0F7;
+            color: #1F334A;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+
+        /* Layouts */
+        .flex-wrap { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .grid-dashboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .calc-layout { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 768px) { .calc-layout { grid-template-columns: 1fr 300px; } }
+        
+        .result-box {
+            margin-top: 10px;
+            border-radius: 7px;
+            background: #EAF0F4;
+            border: 1px solid #AAB5C2;
+            padding: 12px;
+            font-size: 14px;
+            text-align: right;
+            color: #1C2733;
+            font-variant-numeric: tabular-nums;
+            box-shadow: inset 0 1px 1px rgba(21, 31, 41, 0.14);
+            line-height: 1.5;
+        }
+        
+        /* Basic Calc Keys */
+        .grid-keys { display: grid; grid-template-columns: repeat(4, minmax(48px, 1fr)); gap: 8px; margin-top: 8px; }
+        .key-btn {
+            min-height: 48px;
+            border-radius: 6px;
+            border: 1px solid #9FA8B3;
+            background: linear-gradient(180deg, #FCFDFE 0%, #E7EBF0 100%);
+            cursor: pointer;
+            font-size: 16px;
+            color: #1E2730;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 0 rgba(156,166,177,0.7);
+            transition: transform 0.12s ease;
+        }
+        .key-btn:active, .key-btn.bouncing { transform: scale(0.94); }
+        .key-btn.op-add { background: #FFE082; }
+        .key-btn.op-sub { background: #FFAB91; }
+        .key-btn.op-mul { background: #80DEEA; }
+        .key-btn.op-div { background: #B39DDB; }
+        .key-btn.op-eq { background: #A5D6A7; font-weight: bold; border-color: #344A64; }
+
+        .history-item {
+            text-align: left; min-height: 48px; border: 1px solid #B8C0C8; border-radius: 7px;
+            background: #FEFEFE; padding: 8px 10px; cursor: pointer; color: #27313B;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); width: 100%; box-sizing: border-box; margin-bottom: 8px;
+        }
+        
+        table { width: 100%; text-align: left; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+        th, td { padding: 6px; border-bottom: 1px solid #C3CAD2; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h2>StudyCalc</h2>
+        <button id="backBtn" class="btn-action" style="display: none;" onclick="App.navigate('dashboard')">← Back to dashboard</button>
+    </header>
+    
+    <div id="feedbackBox" style="font-size: 13px; color: #4B4B4B; display: none;"></div>
+
+    <!-- Main View Container -->
+    <main id="app-root"></main>
+</div>
+
+<script>
+// --- PDF Generation Logic ---
+function escapePdfText(value) {
+    return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
+function toPdfLatinText(value) {
+    return value.split("").map((char) => {
+        const code = char.charCodeAt(0);
+        return (code === 9 || code === 10 || (code >= 32 && code <= 126)) ? char : "?";
+    }).join("");
+}
+function createSimplePdfBlob(title, content) {
+    const rawLines = `${title}\n\n${content}`.split("\n");
+    const wrappedLines = [];
+    rawLines.forEach((line) => {
+        const clean = toPdfLatinText(line);
+        if (clean.length === 0) { wrappedLines.push(""); return; }
+        for (let i = 0; i < clean.length; i += 90) wrappedLines.push(clean.slice(i, i + 90));
+    });
+
+    const textOps = wrappedLines.map((line, index) => {
+        const safe = escapePdfText(line);
+        return index === 0 ? `(${safe}) Tj` : `T* (${safe}) Tj`;
+    }).join("\n");
+    
+    const stream = `BT\n/F1 12 Tf\n50 790 Td\n14 TL\n${textOps}\nET`;
+    const objects = [
+        "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+        "2 0 obj << /Type /Pages /Count 1 /Kids [3 0 R] >> endobj",
+        "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
+        "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+        `5 0 obj << /Length ${stream.length} >> stream\n${stream}\nendstream endobj`,
+    ];
+
+    let pdf = "%PDF-1.4\n";
+    const offsets = [0];
+    objects.forEach((obj) => {
+        offsets.push(pdf.length);
+        pdf += `${obj}\n`;
+    });
+    const xrefStart = pdf.length;
+    pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    for (let i = 1; i <= objects.length; i++) {
+        pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+    }
+    pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+    return new Blob([pdf], { type: "application/pdf" });
+}
+
+// --- Audio Logic ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBasicTone(key) {
+    if (!audioCtx) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const freqMap = { "+": 740, "-": 520, "×": 660, "÷": 580, "=": 880 };
+        
+        osc.type = key === "=" ? "triangle" : "sine";
+        osc.frequency.value = freqMap[key] || 640;
+        
+        gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.06, audioCtx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.11);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+    } catch (e) {}
+}
+
+// --- App State & Data ---
+const calculators = [
+    { id: "basic", title: "Basic", category: "Arithmetic", description: "Quick daily arithmetic operations." },
+    { id: "scientific", title: "Scientific", category: "Advanced Math", description: "Trig, logs, powers, roots." },
+    { id: "emi", title: "EMI / Loan", category: "Finance", description: "Monthly EMI and repayment breakdown." },
+    { id: "fd", title: "Fixed Deposit", category: "Finance", description: "Maturity value with compounding." },
+    { id: "currency", title: "Currency", category: "Global", description: "Base conversions." },
+    { id: "bmi", title: "BMI / Health", category: "Health", description: "Body mass index." },
+    { id: "gst", title: "GST / Tax", category: "Taxation", description: "GST add/remove." },
+    { id: "tip", title: "Tip & Discount", category: "Billing", description: "Calculate tip or discount on any amount." }
+];
+
+const App = {
+    view: 'dashboard',
+    search: '',
+    category: 'All',
+    historyMap: JSON.parse(localStorage.getItem('studycalc-history')) || {},
+    
+    // States for calculators
+    state: {
+        basic: { exp: "0", res: "0", sparkle: "" },
+        scientific: { exp: "sin(30)", res: "0.5" },
+        emi: { principal: 500000, rate: 9.5, term: 5 },
+        fd: { deposit: 100000, rate: 7.2, years: 3, compounds: 4 },
+        currency: { amount: 100, from: "USD", to: "INR" },
+        bmi: { mode: "metric", hCm: 170, wKg: 65, hFt: 5.7, wLb: 150 },
+        gst: { amount: 1000, rate: 18, mode: "add" },
+        tip: { amount: 100, rate: 10, mode: "tip" }
+    },
+
+    navigate(viewId) {
+        this.view = viewId;
+        document.getElementById('backBtn').style.display = viewId === 'dashboard' ? 'none' : 'block';
+        this.render();
+    },
+
+    pushHistory(calcId, label, snapshot) {
+        if (!this.historyMap[calcId]) this.historyMap[calcId] = [];
+        this.historyMap[calcId].unshift({ id: Date.now(), calcId, label, snapshot });
+        if (this.historyMap[calcId].length > 8) this.historyMap[calcId].pop();
+        localStorage.setItem('studycalc-history', JSON.stringify(this.historyMap));
+        this.render();
+    },
+
+    showFeedback(msg) {
+        const fb = document.getElementById('feedbackBox');
+        fb.innerText = msg;
+        fb.style.display = 'block';
+        setTimeout(() => fb.style.display = 'none', 3000);
+    },
+
+    formatNum(val, max = 2) {
+        if (!Number.isFinite(val)) return "—";
+        return val.toLocaleString(undefined, { maximumFractionDigits: max });
+    },
+
+    handleResultAction(action, text) {
+        if (action === 'copy') {
+            navigator.clipboard.writeText(text).then(() => this.showFeedback("Copied result"));
+        } else if (action === 'download') {
+            const blob = createSimplePdfBlob("StudyCalc Result", text);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'studycalc-result.pdf';
+            a.click();
+            this.showFeedback("PDF Downloaded");
+        }
+    },
+
+    render() {
+        const root = document.getElementById('app-root');
+        if (this.view === 'dashboard') {
+            root.innerHTML = this.renderDashboard();
+        } else {
+            root.innerHTML = `
+                <div class="calc-layout">
+                    <div class="card ${this.view === 'basic' ? 'basic-card' : ''}">
+                        ${this.renderCalculator(this.view)}
+                    </div>
+                    <aside class="card">
+                        <div style="font-weight:700; margin-bottom:12px;">History</div>
+                        ${this.renderHistory(this.view)}
+                    </aside>
+                </div>
+            `;
+        }
+    },
+
+    renderDashboard() {
+        const cats = ["All", ...new Set(calculators.map(c => c.category))];
+        const filtered = calculators.filter(c => 
+            (this.category === 'All' || c.category === this.category) &&
+            c.title.toLowerCase().includes(this.search.toLowerCase())
+        );
+
+        return `
+            <div class="card" style="margin-bottom: 16px;">
+                <label>Search calculators</label>
+                <input type="text" placeholder="Type a name..." value="${this.search}" oninput="App.search = this.value; App.render()">
+                <div style="display:flex; gap:8px; overflow-x:auto;">
+                    ${cats.map(c => `<button class="chip ${this.category === c ? 'active' : ''}" onclick="App.category='${c}'; App.render()">${c}</button>`).join('')}
+                </div>
+            </div>
+            <div class="grid-dashboard">
+                ${filtered.map(c => `
+                    <article class="card" style="cursor:pointer;" onclick="App.navigate('${c.id}')">
+                        <h4 style="margin:0;">${c.title}</h4>
+                        <span style="font-size:11px; background:#EEF1F4; padding:4px 6px; border-radius:4px; margin-top:8px; display:inline-block;">${c.category}</span>
+                        <p style="font-size:13px; color:#505B68;">${c.description}</p>
+                    </article>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    renderHistory(calcId) {
+        const hist = this.historyMap[calcId] || [];
+        if (hist.length === 0) return `<div style="font-size:13px; color:#666;">No calculations yet.</div>`;
+        return hist.map(h => `
+            <button class="history-item" onclick='App.restoreHistory(${JSON.stringify(h)})'>
+                ${h.label}
+            </button>
+        `).join('');
+    },
+
+    restoreHistory(h) {
+        this.state[h.calcId] = h.snapshot;
+        this.render();
+    },
+
+    renderCalculator(id) {
+        if (id === 'basic') return this.renderBasic();
+        if (id === 'emi') return this.renderEMI();
+        if (id === 'tip') return this.renderTip();
+        if (id === 'scientific') return this.renderScientific();
+        if (id === 'fd') return this.renderFD();
+        if (id === 'gst') return this.renderGST();
+        if (id === 'bmi') return this.renderBMI();
+        if (id === 'currency') return this.renderCurrency();
+        return `<div>Coming soon</div>`;
+    },
+
+    // --- Specific Calculators ---
+
+    renderBasic() {
+        const s = this.state.basic;
+        const keys = ["7","8","9","÷","4","5","6","×","1","2","3","-","0",".","+","="];
+        
+        window.basicKey = (k) => {
+            playBasicTone(k);
+            if (k === '=') {
+                try {
+                    const sanitized = s.exp.replace(/×/g, "*").replace(/÷/g, "/");
+                    s.res = String(Number(new Function(`return (${sanitized})`)()));
+                    s.sparkle = "🎉✨";
+                    this.pushHistory('basic', `${s.exp} = ${s.res}`, { ...s });
+                } catch(e) { s.res = "Error"; }
+            } else {
+                s.exp = s.exp === "0" ? k : s.exp + k;
+                s.sparkle = "✨";
+            }
+            this.render();
+            setTimeout(() => { this.state.basic.sparkle = ""; this.render(); }, 500);
+        };
+
+        const resultText = `Basic: ${s.exp} = ${s.res}`;
+
+        return `
+            <label>Expression</label>
+            <input readonly value="${s.exp}">
+            <div class="flex-wrap">
+                <button class="btn-small" onclick="App.state.basic.exp='0'; App.state.basic.res='0'; App.render()">Clear</button>
+                <button class="btn-small" onclick="App.state.basic.exp = App.state.basic.exp.slice(0,-1) || '0'; App.render()">Backspace</button>
+            </div>
+            <div class="grid-keys">
+                ${keys.map(k => {
+                    let cls = "";
+                    if (k==='+') cls="op-add"; if (k==='-') cls="op-sub";
+                    if (k==='×') cls="op-mul"; if (k==='÷') cls="op-div";
+                    if (k==='=') cls="op-eq";
+                    return `<button class="key-btn ${cls}" onclick="basicKey('${k}')">${k}</button>`;
+                }).join('')}
+            </div>
+            <div class="result-box">
+                Result: ${s.res} ${s.sparkle ? `<span style="font-size:18px;">${s.sparkle}</span>` : ''}
+            </div>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderTip() {
+        const s = this.state.tip;
+        window.updateTip = (k, v) => { s[k] = Number(v); this.render(); };
+        window.setTipMode = (m) => { s.mode = m; this.render(); };
+        
+        const change = (s.amount * s.rate) / 100;
+        const total = s.mode === 'tip' ? s.amount + change : Math.max(s.amount - change, 0);
+        const resultText = `${s.mode === 'tip' ? 'Tip' : 'Discount'} ${s.rate}% on ${s.amount} = ${this.formatNum(total)}`;
+
+        return `
+            <label>Bill / Price Amount</label>
+            <input type="number" value="${s.amount}" oninput="updateTip('amount', this.value)">
+            <label>${s.mode === 'tip' ? 'Tip' : 'Discount'} Percentage</label>
+            <input type="number" value="${s.rate}" oninput="updateTip('rate', this.value)">
+            
+            <div class="flex-wrap" style="margin-top:10px;">
+                <button class="chip ${s.mode === 'tip' ? 'active' : ''}" onclick="setTipMode('tip')">Tip Mode</button>
+                <button class="chip ${s.mode === 'discount' ? 'active' : ''}" onclick="setTipMode('discount')">Discount Mode</button>
+            </div>
+
+            <div class="result-box">
+                ${s.mode === 'tip' ? 'Tip Value' : 'Discount Value'}: ${this.formatNum(change)}<br/>
+                <strong>Final Total: ${this.formatNum(total)}</strong>
+            </div>
+            
+            <button class="btn-action" style="margin-top:8px;" onclick="App.pushHistory('tip', '${s.mode} ${s.rate}% on ${s.amount}', App.state.tip)">Save to History</button>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderEMI() {
+        const s = this.state.emi;
+        window.updateEmi = (k, v) => { s[k] = Number(v); this.render(); };
+        
+        const n = s.term * 12;
+        const r = s.rate / 100 / 12;
+        const emi = r === 0 ? s.principal / n : (s.principal * r * (1 + r) ** n) / ((1 + r) ** n - 1);
+        const total = emi * n;
+        const interest = total - s.principal;
+        const resultText = `EMI ${this.formatNum(emi)} Total ${this.formatNum(total)}`;
+
+        return `
+            <label>Principal</label><input type="number" value="${s.principal}" oninput="updateEmi('principal', this.value)">
+            <label>Annual Interest %</label><input type="number" value="${s.rate}" oninput="updateEmi('rate', this.value)">
+            <label>Term (years)</label><input type="number" value="${s.term}" oninput="updateEmi('term', this.value)">
+            
+            <div class="result-box" style="text-align:left;">
+                Monthly EMI: <strong>${this.formatNum(emi)}</strong><br/>
+                Total Interest: ${this.formatNum(interest)}<br/>
+                Total Repayment: ${this.formatNum(total)}
+                <div style="height:10px; background:#ddd; border-radius:5px; margin-top:8px; overflow:hidden;">
+                    <div style="height:100%; width:${Math.min((interest/total)*100, 100)}%; background:var(--accent);"></div>
+                </div>
+            </div>
+            
+            <button class="btn-action" style="margin-top:8px;" onclick="App.pushHistory('emi', 'EMI ${this.formatNum(emi)} for ${s.term}y', App.state.emi)">Save to History</button>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderGST() {
+        const s = this.state.gst;
+        window.updateGst = (k, v) => { s[k] = Number(v); this.render(); };
+        window.setGstMode = (m) => { s.mode = m; this.render(); };
+        
+        let net = 0, gstAmount = 0, gross = 0;
+        if (s.mode === 'add') {
+            net = s.amount;
+            gstAmount = net * (s.rate / 100);
+            gross = net + gstAmount;
+        } else {
+            gross = s.amount;
+            net = gross / (1 + (s.rate / 100));
+            gstAmount = gross - net;
+        }
+        
+        const resultText = `GST ${s.mode}: Net ${this.formatNum(net)}, Tax ${this.formatNum(gstAmount)}`;
+
+        return `
+            <label>Amount</label>
+            <input type="number" value="${s.amount}" oninput="updateGst('amount', this.value)">
+            <label>GST Rate (%)</label>
+            <input type="number" value="${s.rate}" oninput="updateGst('rate', this.value)">
+            
+            <div class="flex-wrap" style="margin-top:10px;">
+                <button class="chip ${s.mode === 'add' ? 'active' : ''}" onclick="setGstMode('add')">Add GST (+)</button>
+                <button class="chip ${s.mode === 'remove' ? 'active' : ''}" onclick="setGstMode('remove')">Remove GST (-)</button>
+            </div>
+
+            <div class="result-box" style="text-align:left;">
+                Net Amount: <strong>${this.formatNum(net)}</strong><br/>
+                GST Amount: <strong>${this.formatNum(gstAmount)}</strong><br/>
+                Gross Total: <strong>${this.formatNum(gross)}</strong>
+            </div>
+            
+            <button class="btn-action" style="margin-top:8px;" onclick="App.pushHistory('gst', '${s.mode} ${s.rate}% GST on ${s.amount}', App.state.gst)">Save to History</button>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderFD() {
+        const s = this.state.fd;
+        window.updateFd = (k, v) => { s[k] = Number(v); this.render(); };
+        
+        const P = s.deposit;
+        const r = s.rate / 100;
+        const n = s.compounds;
+        const t = s.years;
+        const A = P * Math.pow(1 + (r / n), n * t);
+        const interest = A - P;
+        const resultText = `FD Maturity: ${this.formatNum(A)}`;
+
+        return `
+            <label>Deposit Amount</label><input type="number" value="${s.deposit}" oninput="updateFd('deposit', this.value)">
+            <label>Interest Rate (%)</label><input type="number" value="${s.rate}" oninput="updateFd('rate', this.value)">
+            <label>Years</label><input type="number" value="${s.years}" oninput="updateFd('years', this.value)">
+            <label>Compounding Frequency (per year)</label>
+            <select onchange="updateFd('compounds', this.value)">
+                <option value="1" ${s.compounds === 1 ? 'selected' : ''}>Yearly (1)</option>
+                <option value="4" ${s.compounds === 4 ? 'selected' : ''}>Quarterly (4)</option>
+                <option value="12" ${s.compounds === 12 ? 'selected' : ''}>Monthly (12)</option>
+            </select>
+            
+            <div class="result-box" style="text-align:left;">
+                Total Investment: ${this.formatNum(P)}<br/>
+                Wealth Gained: ${this.formatNum(interest)}<br/>
+                Maturity Value: <strong>${this.formatNum(A)}</strong>
+            </div>
+            
+            <button class="btn-action" style="margin-top:8px;" onclick="App.pushHistory('fd', 'FD ${this.formatNum(A)} after ${s.years}y', App.state.fd)">Save to History</button>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderBMI() {
+        const s = this.state.bmi;
+        window.updateBmi = (k, v) => { s[k] = Number(v); this.render(); };
+        window.setBmiMode = (m) => { s.mode = m; this.render(); };
+        
+        let bmi = 0;
+        if (s.mode === 'metric') {
+            const hM = s.hCm / 100;
+            bmi = hM > 0 ? s.wKg / (hM * hM) : 0;
+        } else {
+            const hIn = s.hFt * 12; 
+            bmi = hIn > 0 ? (703 * s.wLb) / (hIn * hIn) : 0;
+        }
+        
+        let cat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal Weight' : bmi < 30 ? 'Overweight' : 'Obese';
+        const resultText = `BMI: ${this.formatNum(bmi)} (${cat})`;
+
+        return `
+            <div class="flex-wrap" style="margin-bottom:10px;">
+                <button class="chip ${s.mode === 'metric' ? 'active' : ''}" onclick="setBmiMode('metric')">Metric (cm/kg)</button>
+                <button class="chip ${s.mode === 'imperial' ? 'active' : ''}" onclick="setBmiMode('imperial')">Imperial (ft/lbs)</button>
+            </div>
+            
+            ${s.mode === 'metric' ? `
+                <label>Height (cm)</label><input type="number" value="${s.hCm}" oninput="updateBmi('hCm', this.value)">
+                <label>Weight (kg)</label><input type="number" value="${s.wKg}" oninput="updateBmi('wKg', this.value)">
+            ` : `
+                <label>Height (Decimal Feet, e.g., 5.5 = 5'6")</label><input type="number" step="0.1" value="${s.hFt}" oninput="updateBmi('hFt', this.value)">
+                <label>Weight (lbs)</label><input type="number" value="${s.wLb}" oninput="updateBmi('wLb', this.value)">
+            `}
+
+            <div class="result-box" style="text-align:center;">
+                Your BMI: <strong>${this.formatNum(bmi)}</strong><br/>
+                Category: <strong>${cat}</strong>
+            </div>
+            
+            <button class="btn-action" style="margin-top:8px;" onclick="App.pushHistory('bmi', 'BMI ${this.formatNum(bmi)} (${cat})', App.state.bmi)">Save to History</button>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderScientific() {
+        const s = this.state.scientific;
+        window.updateSci = (v) => { s.exp = v; this.render(); };
+        window.evalSci = () => {
+            try {
+                // Parse standard math names to JS Math functions
+                let expr = s.exp.replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos')
+                                .replace(/tan/g, 'Math.tan').replace(/log/g, 'Math.log10')
+                                .replace(/pi/g, 'Math.PI').replace(/sqrt/g, 'Math.sqrt');
+                s.res = String(Number(new Function(`return (${expr})`)()));
+                this.pushHistory('scientific', `${s.exp} = ${s.res}`, { ...s });
+            } catch(e) { s.res = "Error"; }
+            this.render();
+        };
+
+        const resultText = `Sci: ${s.exp} = ${s.res}`;
+
+        return `
+            <label>Expression (Supports sin(), cos(), tan(), sqrt(), log(), pi)</label>
+            <input type="text" value="${s.exp}" oninput="updateSci(this.value)" placeholder="e.g., sin(30) + sqrt(16)">
+            
+            <button class="btn-action" style="width:100%; margin-top:8px;" onclick="evalSci()">Evaluate Expression</button>
+            
+            <div class="result-box">
+                Result: <strong>${s.res}</strong>
+            </div>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderCurrency() {
+        const s = this.state.currency;
+        window.updateCurr = (k, v) => { s[k] = v; this.render(); };
+        
+        // Mocked exchange rates with USD as base for demonstration
+        const rates = { USD: 1, INR: 83.2, EUR: 0.93, GBP: 0.79, JPY: 151.4 };
+        const converted = (s.amount / rates[s.from]) * rates[s.to];
+        const resultText = `${s.amount} ${s.from} = ${this.formatNum(converted)} ${s.to}`;
+
+        return `
+            <label>Amount</label><input type="number" value="${s.amount}" oninput="updateCurr('amount', this.value)">
+            <label>From Currency</label>
+            <select onchange="updateCurr('from', this.value)">
+                ${Object.keys(rates).map(c => `<option value="${c}" ${s.from === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+            <label>To Currency</label>
+            <select onchange="updateCurr('to', this.value)">
+                ${Object.keys(rates).map(c => `<option value="${c}" ${s.to === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+
+            <div class="result-box">
+                Converted Amount: <strong>${this.formatNum(converted)} ${s.to}</strong>
+            </div>
+            
+            <button class="btn-action" style="margin-top:8px;" onclick="App.pushHistory('currency', '${s.amount} ${s.from} to ${s.to}', App.state.currency)">Save to History</button>
+            ${this.renderTools(resultText)}
+        `;
+    },
+
+    renderTools(text) {
+        return `
+            <div class="flex-wrap" style="margin-top:12px;">
+                <button class="btn-small" onclick="App.handleResultAction('copy', '${text}')">Copy</button>
+                <button class="btn-small" onclick="App.handleResultAction('download', '${text}')">Download PDF</button>
+            </div>
+        `;
+    }
+};
+
+// Init
+App.render();
+
+</script>
+</body>
+</html>
